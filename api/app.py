@@ -124,15 +124,14 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 DATA_FILE = 'books.json'
 def load_books():
-    with open(DATA_FILE, 'r') as f:
-        return json.load(f)
-    return []
+    pass
 
 def save_books(books):
-    with open(DATA_FILE, 'w') as f:
-        json.dump(books, f, indent=2)
+    pass
 
-books = load_books()
+
+
+books = []
 
 # def extract_isbn_from_image(image_path):
 #     img = cv2.imread(image_path)
@@ -220,6 +219,11 @@ def edit_book():
         books[index]['isbn'] = data['isbn']
         save_books(books)
     return "Success"
+    
+@app.route("/json")
+def save_books(books):
+    return json.dump(books, f, indent=2)
+
 
 @app.route('/delete', methods=['POST'])
 def delete_book():
