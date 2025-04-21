@@ -122,16 +122,10 @@ from werkzeug.utils import secure_filename
 # from PIL import Image
 
 app = Flask(__name__)
-
-UPLOAD_FOLDER = 'static/uploads'
 DATA_FILE = 'books.json'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
 def load_books():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, 'r') as f:
-            return json.load(f)
+    with open(DATA_FILE, 'r') as f:
+        return json.load(f)
     return []
 
 def save_books(books):
