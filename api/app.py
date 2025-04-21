@@ -117,7 +117,7 @@ import os
 import json
 import requests
 from werkzeug.utils import secure_filename
-import cv2
+# import cv2
 # from pyzbar.pyzbar import decode
 from PIL import Image
 
@@ -140,13 +140,13 @@ def save_books(books):
 
 books = load_books()
 
-def extract_isbn_from_image(image_path):
-    img = cv2.imread(image_path)
-    detector = cv2.QRCodeDetector()
-    retval, decoded_info, points, straight_qrcode = detector(img)
-    if retval:
-        return decoded_info[0]
-    return None
+# def extract_isbn_from_image(image_path):
+#     img = cv2.imread(image_path)
+#     detector = cv2.QRCodeDetector()
+#     retval, decoded_info, points, straight_qrcode = detector(img)
+#     if retval:
+#         return decoded_info[0]
+#     return None
 
 def get_book_data(isbn):
     google_api = f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}"
@@ -202,17 +202,17 @@ def add_book():
         book = get_book_data(isbn)
         if book:
             books.append(book)
-    elif method == 'image':
-        image = request.files['image']
-        if image:
-            filename = secure_filename(image.filename)
-            path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            image.save(path)
-            isbn = extract_isbn_from_image(path)
-            if isbn:
-                book = get_book_data(isbn)
-                if book:
-                    books.append(book)
+    # elif method == 'image':
+    #     image = request.files['image']
+    #     if image:
+    #         filename = secure_filename(image.filename)
+    #         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    #         image.save(path)
+    #         isbn = extract_isbn_from_image(path)
+    #         if isbn:
+    #             book = get_book_data(isbn)
+    #             if book:
+    #                 books.append(book)
     save_books(books)
     return redirect(url_for('index'))
 
