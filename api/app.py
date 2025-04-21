@@ -119,7 +119,7 @@ import requests
 from werkzeug.utils import secure_filename
 # import cv2
 # from pyzbar.pyzbar import decode
-from PIL import Image
+# from PIL import Image
 
 app = Flask(__name__)
 
