@@ -221,7 +221,7 @@ def edit_book():
     return "Success"
     
 @app.route("/json")
-def save_books(books):
+def save_books():
     return json.dump(books, f, indent=2)
 
 
