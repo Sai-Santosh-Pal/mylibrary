@@ -117,7 +117,8 @@ import os
 import json
 import requests
 from werkzeug.utils import secure_filename
-from pyzbar.pyzbar import decode
+import cv2
+# from pyzbar.pyzbar import decode
 from PIL import Image
 
 app = Flask(__name__)
@@ -140,10 +141,11 @@ def save_books(books):
 books = load_books()
 
 def extract_isbn_from_image(image_path):
-    img = Image.open(image_path)
-    decoded_objects = decode(img)
-    for obj in decoded_objects:
-        return obj.data.decode('utf-8')
+    img = cv2.imread(image_path)
+    detector = cv2.QRCodeDetector()
+    retval, decoded_info, points, straight_qrcode = detector(img)
+    if retval:
+        return decoded_info[0]
     return None
 
 def get_book_data(isbn):
