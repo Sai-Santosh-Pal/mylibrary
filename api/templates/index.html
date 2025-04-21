@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -347,3 +347,346 @@ function deleteBook() {
 </body>
 </html>
 
+ -->
+
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Library Manager</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f4f4f4; }
+    h1 { text-align: center; }
+    form, .book-list { max-width: 800px; margin: auto; margin-bottom: 2rem; }
+    .book-card {
+      display: flex; align-items: center; background: white; padding: 1rem; border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 1rem;
+    }
+    .book-card img { width: 100px; height: auto; border-radius: 4px; margin-right: 1rem; }
+    .book-info { flex: 1; }
+    .actions i {
+      margin-left: 10px; cursor: pointer;
+    }
+    .book-info p { margin: 0.2rem 0; }
+    .button-link {
+      display: inline-block;
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      text-decoration: none;
+      border-radius: 5px;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .button-link:hover {
+      background-color: #45a049;
+    }
+    .book-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .book-card img, .placeholder {
+      width: 100px;
+      height: 150px;
+      object-fit: cover;
+      background: #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      text-align: center;
+      color: #555;
+    }
+    .book-info {
+      flex: 1;
+    }
+    .book-info h2 {
+      margin: 0 0 8px;
+    }
+    .book-info p {
+      margin: 4px 0;
+    }
+    .btn {
+      background: #007bff;
+      color: white;
+      padding: 8px 12px;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 14px;
+      display: inline-block;
+      margin-top: 8px;
+    }
+    .btn:hover {
+      background: #0056b3;
+    }
+    .modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  position: absolute;
+  top: 200px;
+  background: white;
+  padding: 50px;
+  border-radius: 10px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+}
+
+.modal input {
+  width: 100%;
+  margin: 10px 0;
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.modal button {
+  margin: 10px 5px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.modal button:first-child {
+  background-color: #007bff;
+  color: white;
+}
+
+.modal button:last-child {
+  background-color: #dc3545;
+  color: white;
+}
+  </style>
+</head>
+<body>
+  <h1>Library Manager</h1>
+
+  <form action="/add" method="post" enctype="multipart/form-data">
+    <h3>Add Book</h3>
+    <label><input type="radio" name="method" value="manual" checked> Manual</label>
+    <label><input type="radio" name="method" value="isbn"> ISBN</label>
+    
+    <div id="manualFields">
+      <input type="text" name="title" placeholder="Title" required><br>
+      <input type="text" name="author" placeholder="Author" required><br>
+      <input type="text" name="isbn" placeholder="ISBN" required><br>
+    </div>
+
+    <div id="isbnField" style="display:none;">
+      <input type="text" name="isbn_only" placeholder="ISBN">
+    </div>
+
+    <button type="submit">Add Book</button>
+  </form>
+
+  <div class="book-list">
+       {% for book in books %}
+  <div class="book-card">
+    {% if book.thumbnail %}
+      <img src="{{ book.thumbnail }}" alt="{{ book.title }}">
+    {% else %}
+      <div class="placeholder" onclick="openUploadDialog('{{ book.isbn }}')">Upload<br>Cover</div>
+    {% endif %}
+
+    <div class="book-info">
+      <h2>{{ book.title }} - {{ book.subtitle }}</h2>
+      <p><strong>Author:</strong> {{ book.author }}</p>
+      <p><strong>ISBN:</strong> {{ book.isbn }}</p>
+      <p><strong>Description:</strong> {{ book.description or 'No description available.' }}</p>
+      <a onclick="openEditModal({{ loop.index0 }})" class="btn">Edit</a>
+<a onclick="confirmDelete({{ loop.index0 }})" class="btn">Delete</a>
+      <script>
+      function submitEdit(e) {
+  e.preventDefault();
+  const index = document.getElementById('editIndex').value;
+  const updatedBook = {
+    title: document.getElementById('editTitle').value,
+    author: document.getElementById('editAuthor').value,
+    isbn: document.getElementById('editISBN').value,
+  };
+
+  fetch('/edit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ index, ...updatedBook })
+  }).then(res => {
+    if (res.ok) location.reload();
+    else alert("Edit failed");
+  });
+}
+
+function confirmDelete(index) {
+  deleteIndex = index;
+  document.getElementById('deleteModal').style.display = 'block';
+}
+
+function deleteBook() {
+  fetch('/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ index: deleteIndex })
+  }).then(res => {
+    if (res.ok) location.reload();
+    else alert("Delete failed");
+  });
+}
+</script>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="uploadImage(event)">
+
+  <script>
+    let currentISBN = null;
+
+    function openUploadDialog(isbn) {
+      currentISBN = isbn;
+      document.getElementById("fileInput").click();
+    }
+
+    function uploadImage(event) {
+      const file = event.target.files[0];
+      if (!file || !currentISBN) return;
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("isbn", currentISBN);
+
+      fetch("/upload_cover", {
+        method: "POST",
+        body: formData,
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
+        } else {
+          alert("Upload failed.");
+        }
+      });
+    }
+  </script>
+    {% endfor %}
+  </div>
+
+  <script>
+    const radios = document.querySelectorAll('input[name="method"]');
+    const manualFields = document.getElementById('manualFields');
+    const isbnField = document.getElementById('isbnField');
+
+    radios.forEach(radio => {
+      radio.addEventListener('change', () => {
+        manualFields.style.display = radio.value === 'manual' ? 'block' : 'none';
+        isbnField.style.display = radio.value === 'isbn' ? 'block' : 'none';
+
+        // Remove all hidden fields from the form for better handling
+        if (radio.value !== 'manual') {
+          document.querySelector('[name="title"]').remove();
+          document.querySelector('[name="author"]').remove();
+          document.querySelector('[name="isbn"]').remove();
+        } else {
+          // Ensure the manual fields are added back if needed
+          if (!document.querySelector('[name="title"]')) {
+            manualFields.insertAdjacentHTML('beforeend', '<input type="text" name="title" placeholder="Title" required><br>');
+            manualFields.insertAdjacentHTML('beforeend', '<input type="text" name="author" placeholder="Author" required><br>');
+            manualFields.insertAdjacentHTML('beforeend', '<input type="text" name="isbn" placeholder="ISBN" required><br>');
+          }
+        }
+      });
+    });
+  </script>
+<!-- Edit Modal -->
+<div id="editModal" class="modal-overlay">
+  <div class="modal">
+    <form onsubmit="submitEdit(event)">
+      <input type="hidden" id="editIndex">
+      <input type="text" id="editTitle" required>
+      <input type="text" id="editAuthor" required>
+      <input type="text" id="editISBN" required>
+      <button type="submit">Save</button>
+      <button type="button" onclick="closeEditModal()">Cancel</button>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div id="deleteModal" class="modal-overlay">
+  <div class="modal">
+    <p>Are you sure you want to delete this book?</p>
+    <button onclick="deleteBook()">Yes</button>
+    <button onclick="closeDeleteModal()">No</button>
+  </div>
+</div>
+
+<script>
+function closeEditModal() {
+  document.getElementById('editModal').style.display = 'none';
+}
+
+function closeDeleteModal() {
+  deleteIndex = null;
+  document.getElementById('deleteModal').style.display = 'none';
+}
+
+  let books = {{ books | tojson }};
+  let deleteIndex = null;
+
+  function openEditModal(index) {
+    document.getElementById('editIndex').value = index;
+    document.getElementById('editTitle').value = books[index].title;
+    document.getElementById('editAuthor').value = books[index].author;
+    document.getElementById('editISBN').value = books[index].isbn;
+    document.getElementById('editModal').style.display = 'block';
+  }
+
+  function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+  }
+
+  function closeDeleteModal() {
+    deleteIndex = null;
+    document.getElementById('deleteModal').style.display = 'none';
+  }
+
+  
+function deleteBook() {
+  if (deleteIndex === null) return;
+
+  fetch('/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ index: deleteIndex })
+  })
+  .then(res => {
+    if (res.ok) {
+      location.reload();
+    } else {
+      alert("Delete failed");
+    }
+  });
+
+  // Hide the modal
+  document.getElementById('deleteModal').style.display = 'none';
+}
+</script>
+
+</body>
+</html>
